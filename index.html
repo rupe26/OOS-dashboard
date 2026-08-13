@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>माहिती संकलन सनियंत्रण फलक</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a2332;
+    --paper:#f4f2ec;
+    --card:#ffffff;
+    --rule:#d8d3c4;
+    --navy:#22344a;
+    --navy-deep:#16232f;
+    --brass:#a97142;
+    --brass-light:#c98a53;
+    --ok:#3f7a5c;
+    --ok-bg:#e7f1eb;
+    --pend:#b3572e;
+    --pend-bg:#fbeee5;
+    --muted:#6b7280;
+    --shadow: 0 1px 2px rgba(22,35,47,0.06), 0 8px 24px rgba(22,35,47,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 100% -10%, rgba(169,113,66,0.08), transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans Devanagari','Segoe UI',sans-serif;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  .mono{font-family:'Space Mono',monospace;}
+
+  header.top{
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+    color:#f3efe4;
+    padding:28px 24px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::after{
+    content:"";
+    position:absolute; right:-40px; top:-60px;
+    width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,138,83,0.35), transparent 70%);
+  }
+  .top-inner{max-width:1180px; margin:0 auto; position:relative;}
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--brass-light); margin-bottom:8px;
+  }
+  h1{
+    font-size:clamp(22px,3.4vw,32px);
+    margin:0 0 6px;
+    font-weight:800;
+    letter-spacing:0.2px;
+  }
+  .sub{color:#c7cedb; font-size:14.5px; max-width:640px; line-height:1.5;}
+
+  main{max-width:1180px; margin:0 auto; padding:26px 24px 0;}
+
+  /* Dashboard */
+  .dash-title{
+    display:flex; align-items:baseline; gap:10px; margin:6px 0 14px;
+  }
+  .dash-title .num{font-family:'Space Mono',monospace; color:var(--brass); font-weight:700;}
+  .dash-title h2{font-size:15px; margin:0; text-transform:uppercase; letter-spacing:0.1em; color:var(--navy); font-weight:700;}
+
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:28px;
+  }
+  @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:520px){.cards{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:16px 16px 14px;
+    box-shadow:var(--shadow);
+    position:relative;
+  }
+  .card.overall{background:linear-gradient(135deg, var(--navy), var(--navy-deep)); color:#fff; border-color:var(--navy-deep);}
+  .card .label{font-size:12.5px; color:var(--muted); font-weight:600; margin-bottom:8px;}
+  .card.overall .label{color:#c7cedb;}
+  .card .figures{display:flex; align-items:baseline; gap:8px;}
+  .card .figures .big{font-family:'Space Mono',monospace; font-size:28px; font-weight:700;}
+  .card .figures .of{font-size:13px; color:var(--muted);}
+  .card.overall .figures .of{color:#c7cedb;}
+  .bar{height:6px; border-radius:4px; background:var(--rule); margin-top:10px; overflow:hidden;}
+  .card.overall .bar{background:rgba(255,255,255,0.18);}
+  .bar-fill{height:100%; border-radius:4px; background:var(--ok); transition:width .4s ease;}
+  .card.overall .bar-fill{background:var(--brass-light);}
+  .card .pending-tag{
+    position:absolute; top:14px; right:14px;
+    font-size:11px; font-family:'Space Mono',monospace; color:var(--pend);
+    background:var(--pend-bg); padding:2px 8px; border-radius:20px; font-weight:700;
+  }
+  .card.overall .pending-tag{background:rgba(255,255,255,0.15); color:#fbe4d4;}
+
+  /* Toolbar */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    margin-bottom:14px;
+  }
+  .search{
+    flex:1; min-width:200px;
+    background:var(--card); border:1px solid var(--rule); border-radius:8px;
+    padding:9px 12px; font-size:14px; font-family:inherit; color:var(--ink);
+  }
+  .search:focus{outline:2px solid var(--brass-light); outline-offset:1px;}
+  .filters{display:flex; gap:6px; background:var(--card); border:1px solid var(--rule); border-radius:8px; padding:3px;}
+  .filters button{
+    border:none; background:transparent; padding:7px 13px; border-radius:6px;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;
+  }
+  .filters button.active{background:var(--navy); color:#fff;}
+  .filters button:focus-visible{outline:2px solid var(--brass); outline-offset:1px;}
+  .add-btn{
+    background:var(--brass); color:#fff; border:none; border-radius:8px;
+    padding:9px 16px; font-family:inherit; font-weight:700; font-size:13.5px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .add-btn:hover{background:var(--brass-light);}
+  .add-btn:focus-visible{outline:2px solid var(--navy); outline-offset:2px;}
+
+  /* Table */
+  .table-wrap{
+    background:var(--card); border:1px solid var(--rule); border-radius:10px;
+    overflow:hidden; box-shadow:var(--shadow); margin-bottom:20px;
+  }
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  thead th{
+    background:#eee9dd; color:var(--navy);
+    text-align:left; padding:11px 12px; font-size:12px; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.04em;
+    border-bottom:1px solid var(--rule);
+    white-space:nowrap;
+  }
+  thead th.center, td.center{text-align:center;}
+  tbody tr{border-bottom:1px solid #ece8dc;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:#faf8f2;}
+  td{padding:10px 12px; vertical-align:middle;}
+  .sr{font-family:'Space Mono',monospace; color:var(--muted); font-size:12.5px;}
+  .school-name{font-weight:600; color:var(--ink);}
+  .udise{font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); margin-top:2px;}
+  .chk-wrap{display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .chk-wrap input[type=checkbox]{
+    width:19px; height:19px; accent-color:var(--ok); cursor:pointer;
+  }
+  .chk-label{font-size:10px; color:var(--muted); font-family:'Space Mono',monospace;}
+  .status-badge{
+    display:inline-block; padding:4px 10px; border-radius:20px;
+    font-size:11.5px; font-weight:700; font-family:'Space Mono',monospace;
+  }
+  .status-badge.done{background:var(--ok-bg); color:var(--ok);}
+  .status-badge.pending{background:var(--pend-bg); color:var(--pend);}
+  .row-actions button{
+    border:none; background:transparent; cursor:pointer; color:var(--muted); font-size:16px;
+    padding:2px 6px; border-radius:4px;
+  }
+  .row-actions button:hover{color:var(--pend); background:var(--pend-bg);}
+
+  .empty{padding:40px 20px; text-align:center; color:var(--muted); font-size:14px;}
+
+  footer.note{
+    max-width:1180px; margin:0 auto; padding:0 24px; color:var(--muted); font-size:12px; line-height:1.6;
+  }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(22,35,47,0.55);
+    display:flex; align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .modal{
+    background:var(--card); border-radius:12px; padding:22px; width:100%; max-width:420px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal h3{margin:0 0 14px; font-size:16px; color:var(--navy);}
+  .modal label{display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin:12px 0 5px;}
+  .modal input{
+    width:100%; padding:9px 11px; border:1px solid var(--rule); border-radius:7px;
+    font-family:inherit; font-size:14px;
+  }
+  .modal input:focus{outline:2px solid var(--brass-light); outline-offset:1px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:20px;}
+  .modal-actions button{
+    border:none; border-radius:7px; padding:9px 16px; font-family:inherit; font-weight:700;
+    font-size:13.5px; cursor:pointer;
+  }
+  .btn-cancel{background:#eee9dd; color:var(--ink);}
+  .btn-save{background:var(--navy); color:#fff;}
+
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="eyebrow">केंद्र रविवार पेठ · ता. अंबाजोगाई · जि. बीड</div>
+    <h1>माहिती संकलन सनियंत्रण फलक</h1>
+    <div class="sub">शाळाबाह्य सर्व्हे, SNA Sparsh चेकर व मेकर माहितीचे शाळानिहाय संकलन स्थिती — प्राप्त व प्रलंबित नोंदींचा गोषवारा.</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="dash-title"><span class="num mono" id="totalCount">0</span><h2>शाळांचा गोषवारा</h2></div>
+  <div class="cards" id="dashCards"></div>
+
+  <div class="toolbar">
+    <input type="text" class="search" id="searchBox" placeholder="शाळेचे नाव किंवा युडायस कोड शोधा…">
+    <div class="filters" role="group" aria-label="स्थिती फिल्टर">
+      <button data-filter="all" class="active">सर्व</button>
+      <button data-filter="pending">प्रलंबित</button>
+      <button data-filter="done">पूर्ण प्राप्त</button>
+    </div>
+    <button class="add-btn" id="addBtn">+ नवीन शाळा जोडा</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>अ.क्र.</th>
+          <th>शाळेचे नाव</th>
+          <th class="center">शालाबाह्य सर्व्हे<br><span style="font-weight:400;text-transform:none;font-size:10.5px;">माहिती प्राप्त</span></th>
+          <th class="center">SNA Sparsh चेकर<br><span style="font-weight:400;text-transform:none;font-size:10.5px;">माहिती प्राप्त</span></th>
+          <th class="center">SNA Sparsh मेकर<br><span style="font-weight:400;text-transform:none;font-size:10.5px;">माहिती प्राप्त</span></th>
+          <th class="center">एकूण स्थिती</th>
+          <th class="center"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" style="display:none;">कोणतीही शाळा सापडली नाही.</div>
+  </div>
+
+  <footer class="note">
+    माहिती या ब्राऊझरमध्ये आपोआप जतन होते. प्रत्येक रकान्यातील चौकट टिक केल्यावर संबंधित माहिती "प्राप्त" म्हणून नोंदवली जाते.
+  </footer>
+</main>
+
+<div class="overlay" id="overlay" style="display:none;">
+  <div class="modal">
+    <h3 id="modalTitle">नवीन शाळा जोडा</h3>
+    <label for="inName">शाळेचे नाव</label>
+    <input type="text" id="inName" placeholder="उदा. जि.प.प्रा.शा. वरवटी">
+    <label for="inUdise">युडायस कोड (ऐच्छिक)</label>
+    <input type="text" id="inUdise" placeholder="उदा. 27270103301">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelBtn">रद्द करा</button>
+      <button class="btn-save" id="saveBtn">जतन करा</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'schools-checklist-v1';
+
+const seedSchools = [
+  ["27270101612","सी.पी.एस. रविवार पेठ"],
+  ["27270101613","जि.प.प्रा.शा. क्र. २, अंबाजोगाई"],
+  ["27270102401","जि.प.प्रा.शा. साकुड (मराठी)"],
+  ["27270102404","जि.प.प्रा.शा. साकुड (उर्दू)"],
+  ["27270102501","जि.प.प्रा.शा. काळवटी तांडा क्र. १"],
+  ["27270102502","जि.प.प्रा.शा. काळवटी तांडा क्र. ३"],
+  ["27270102503","जि.प.प्रा.शा. भीमाई वस्ती"],
+  ["27270102601","जि.प.प्रा.शा. काळवटी तांडा क्र. २"],
+  ["27270102701","जि.प.प्रा.शा. मांडवा पठाण"],
+  ["27270102801","जि.प.प्रा.शा. मांडवा तांडा"],
+  ["27270102901","जि.प.प्रा.शा. पोलेवाडी"],
+  ["27270103001","जि.प.प्रा.शा. नागझरी वसाहत"],
+  ["27270103101","जि.प.प्रा.शा. शेपवाडी"],
+  ["27270103102","जि.प.प्रा.शा. सह्याद्री नगर शेपवाडी"],
+  ["27270103201","जि.प.प्रा.शा. पिंपळा धायगुडा (मराठी)"],
+  ["27270103203","जि.प.प्रा.शा. पिंपळा धायगुडा (उर्दू)"],
+  ["27270103301","जि.प.प्रा.शा. वरवटी"],
+  ["27270103303","जि.प.प्रा.शा. उघडे वस्ती (वरवटी)"],
+  ["27270103401","जि.प.प्रा.शा. तलाव पाटी"],
+  ["27270103501","जि.प.प्रा.शा. अंबलवाडी"],
+  ["27270103502","जि. प. प्रा.शा. गोल्टावस्ती"],
+  ["27270103701","जि.प.प्रा.शा. गिरवली आपेट"],
+  ["27270103801","जि.प.हा.स्कू. गिरवली"],
+].map((s,i)=>({
+  id: 'sch_'+i,
+  udise: s[0],
+  name: s[1],
+  shalabahya: false,
+  snaChecker: false,
+  snaMaker: false
+}));
+
+let schools = [];
+let currentFilter = 'all';
+let searchTerm = '';
+let editingId = null;
+
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY);
+    if(res && res.value){
+      schools = JSON.parse(res.value);
+    } else {
+      schools = seedSchools;
+      await persist();
+    }
+  }catch(e){
+    schools = seedSchools;
+  }
+  render();
+}
+
+async function persist(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(schools));
+  }catch(e){
+    console.error('जतन करताना त्रुटी', e);
+  }
+}
+
+function fieldCounts(field){
+  const received = schools.filter(s=>s[field]).length;
+  return {received, pending: schools.length - received};
+}
+
+function renderDashboard(){
+  document.getElementById('totalCount').textContent = schools.length;
+  const total = schools.length || 1;
+  const cats = [
+    {key:'shalabahya', label:'शालाबाह्य सर्व्हे'},
+    {key:'snaChecker', label:'SNA Sparsh चेकर'},
+    {key:'snaMaker', label:'SNA Sparsh मेकर'},
+  ];
+  const fullyDone = schools.filter(s=>s.shalabahya && s.snaChecker && s.snaMaker).length;
+
+  const cards = [];
+  cards.push(`
+    <div class="card overall">
+      <span class="pending-tag">${schools.length-fullyDone} प्रलंबित</span>
+      <div class="label">सर्व माहिती प्राप्त (एकूण)</div>
+      <div class="figures"><span class="big">${fullyDone}</span><span class="of">/ ${schools.length}</span></div>
+      <div class="bar"><div class="bar-fill" style="width:${(fullyDone/total*100).toFixed(0)}%"></div></div>
+    </div>`);
+
+  cats.forEach(c=>{
+    const {received, pending} = fieldCounts(c.key);
+    cards.push(`
+      <div class="card">
+        <span class="pending-tag">${pending} प्रलंबित</span>
+        <div class="label">${c.label}</div>
+        <div class="figures"><span class="big">${received}</span><span class="of">/ ${schools.length}</span></div>
+        <div class="bar"><div class="bar-fill" style="width:${(received/total*100).toFixed(0)}%"></div></div>
+      </div>`);
+  });
+
+  document.getElementById('dashCards').innerHTML = cards.join('');
+}
+
+function matchesFilter(s){
+  const complete = s.shalabahya && s.snaChecker && s.snaMaker;
+  if(currentFilter==='done') return complete;
+  if(currentFilter==='pending') return !complete;
+  return true;
+}
+function matchesSearch(s){
+  if(!searchTerm) return true;
+  const t = searchTerm.toLowerCase();
+  return s.name.toLowerCase().includes(t) || (s.udise||'').toLowerCase().includes(t);
+}
+
+function chk(school, field){
+  return `<label class="chk-wrap"><input type="checkbox" ${school[field]?'checked':''} data-id="${school.id}" data-field="${field}"><span class="chk-label">${school[field]?'प्राप्त':'बाकी'}</span></label>`;
+}
+
+function render(){
+  renderDashboard();
+  const tbody = document.getElementById('tbody');
+  const filtered = schools.filter(s=>matchesFilter(s) && matchesSearch(s));
+
+  if(filtered.length===0){
+    tbody.innerHTML='';
+    document.getElementById('emptyMsg').style.display='block';
+  } else {
+    document.getElementById('emptyMsg').style.display='none';
+    tbody.innerHTML = filtered.map((s,idx)=>{
+      const complete = s.shalabahya && s.snaChecker && s.snaMaker;
+      return `
+      <tr>
+        <td class="sr">${idx+1}</td>
+        <td>
+          <div class="school-name">${escapeHtml(s.name)}</div>
+          ${s.udise?`<div class="udise">UDISE ${escapeHtml(s.udise)}</div>`:''}
+        </td>
+        <td class="center">${chk(s,'shalabahya')}</td>
+        <td class="center">${chk(s,'snaChecker')}</td>
+        <td class="center">${chk(s,'snaMaker')}</td>
+        <td class="center"><span class="status-badge ${complete?'done':'pending'}">${complete?'पूर्ण प्राप्त':'प्रलंबित'}</span></td>
+        <td class="center row-actions">
+          <button title="काढून टाका" data-del="${s.id}" aria-label="शाळा काढून टाका">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+document.getElementById('tbody').addEventListener('change', async (e)=>{
+  if(e.target.matches('input[type=checkbox]')){
+    const id = e.target.dataset.id;
+    const field = e.target.dataset.field;
+    const school = schools.find(s=>s.id===id);
+    if(school){
+      school[field] = e.target.checked;
+      await persist();
+      render();
+    }
+  }
+});
+
+document.getElementById('tbody').addEventListener('click', async (e)=>{
+  const delId = e.target.closest('[data-del]');
+  if(delId){
+    const id = delId.getAttribute('data-del');
+    if(confirm('ही शाळा यादीतून काढून टाकायची आहे का?')){
+      schools = schools.filter(s=>s.id!==id);
+      await persist();
+      render();
+    }
+  }
+});
+
+document.getElementById('searchBox').addEventListener('input', (e)=>{
+  searchTerm = e.target.value;
+  render();
+});
+
+document.querySelectorAll('.filters button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+const overlay = document.getElementById('overlay');
+document.getElementById('addBtn').addEventListener('click', ()=>{
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'नवीन शाळा जोडा';
+  document.getElementById('inName').value='';
+  document.getElementById('inUdise').value='';
+  overlay.style.display='flex';
+  document.getElementById('inName').focus();
+});
+document.getElementById('cancelBtn').addEventListener('click', ()=>{ overlay.style.display='none'; });
+overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.style.display='none'; });
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('inName').value.trim();
+  const udise = document.getElementById('inUdise').value.trim();
+  if(!name){ document.getElementById('inName').focus(); return; }
+  schools.push({
+    id: 'sch_'+Date.now(),
+    name, udise,
+    shalabahya:false, snaChecker:false, snaMaker:false
+  });
+  await persist();
+  overlay.style.display='none';
+  render();
+});
+
+loadData();
+</script>
+
+</body>
+</html>
